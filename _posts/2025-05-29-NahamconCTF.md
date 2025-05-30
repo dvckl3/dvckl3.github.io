@@ -97,30 +97,27 @@ if __name__ == "__main__":
 Script:
 ```python
 from pwn import *
-HOST = 'challenge.nahamcon.com'
-PORT = 30272
-def xor_bytes(a: bytes, b: bytes) -> bytes:
-    return bytes(x ^ y for x, y in zip(a, b))
-r = remote(HOST,PORT)
-def main():
-    io = remote(HOST, PORT)
-    response = io.recvuntil(b"Enter text to encrypt")
-    print(response.decode())
-    for line in response.decode().splitlines():
-        if "The encrypted flag is:" in line:
-            enc_flag_hex = line.split(": ")[1]
-            break
-    enc_flag = bytes.fromhex(enc_flag_hex)
-    flag_len = len(enc_flag)
-    io.sendline(b'\x00' * flag_len)
-    while True:
-        response = io.recvline()
-        if b"Encrypted: " in response:
-            key_hex = response.decode().strip().split("Encrypted: ")[1]
-            break
-    key = bytes.fromhex(key_hex)
-    flag = xor_bytes(enc_flag, key)
-    print("[+] Flag:", flag.decode())
-if __name__ == "__main__":
-    main()
+host, port = "challenge.nahamcon.com",30272
+def xor(a:bytes,b:bytes)->bytes:
+	return bytes(x^y for x,y in zip(a,b))
+
+r = remote(host,port)
+response = r.recvuntil(b"Enter text to encrypt")
+print(response.decode())
+for line in response.decode().splitlines():
+	if "The encrypted flag is:" in line:
+		enc_flag_hex = line.split(": ")[1]
+		break
+enc_flag = bytes.fromhex(enc_flag_hex)
+len = len(enc_flag)
+r.sendline(b'\x00'*len)
+response = r.recvline()
+
+if b"Encrypted: " in response:
+	key_hex = response.decode().strip().split("Encrypted: ")[1]
+	break
+
+key = bytes.fromhex(key_hex)
+flag = xor(key,enc_flag)
+print(flag)
 ```
