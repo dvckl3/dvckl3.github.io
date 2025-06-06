@@ -27,6 +27,7 @@ Trong bài viết dưới đây mình sẽ trình bày lại những kiến th�
 
 [6] [Mathematics of Isogeny Based Cryptography](https://arxiv.org/pdf/1711.04062)
 
+[7] [Benjamin Wesolowski's talk](https://www.youtube.com/watch?v=RlW3sm5-Z_I) 
 ## Prerequisite
 
 
