@@ -30,4 +30,5 @@ Trong bài viết dưới đây mình sẽ trình bày lại những kiến th�
 [7] [Benjamin Wesolowski's talk](https://www.youtube.com/watch?v=RlW3sm5-Z_I) 
 ## Prerequisite
 
+### Group theory review
 
