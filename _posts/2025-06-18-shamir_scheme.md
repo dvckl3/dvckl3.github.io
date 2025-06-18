@@ -18,9 +18,9 @@ Cho nên bài toán ở đây là có khả năng khôi phục được khóa m�
 
 Trong trường hợp tổng quát bài toán phân chia bí mật được hình thành như sau: 
 
-- Cần phân chia bí mật $\displaystyle S$ cho $\displaystyle n$ người lưu giữ $\displaystyle ( P_{1} ,P_{2} ,...,P_{n})$, mỗi người $\displaystyle P_{i}$ giữ mootj phần thông tin $\displaystyle x_{i}$ có quan hệ với $\displaystyle S$, sao cho bất kì $\displaystyle t( t\leqslant n)$ trong số $\displaystyle n$ người có thể khôi phục được bí mật $\displaystyle S$ nếu như $\displaystyle t\geqslant k$, ở đây $\displaystyle k$ gọi là ngưỡng (threshold). Thế nhưng số lượng thành viên liên kết nhỏ hơn $\displaystyle k$ thì không thể khôi phục được cho dù giữa họ có một tài nguyên lớn để tính toán. 
+- Cần phân chia bí mật $\displaystyle S$ cho $\displaystyle n$ người lưu giữ $\displaystyle ( P_{1} ,P_{2} ,...,P_{n})$, mỗi người $\displaystyle P_{i}$ giữ một phần thông tin $\displaystyle x_{i}$ có quan hệ với $\displaystyle S$, sao cho bất kì $\displaystyle t( t\leqslant n)$ trong số $\displaystyle n$ người có thể khôi phục được bí mật $\displaystyle S$ nếu như $\displaystyle t\geqslant k$, ở đây $\displaystyle k$ gọi là ngưỡng (threshold). Thế nhưng số lượng thành viên liên kết nhỏ hơn $\displaystyle k$ thì không thể khôi phục được cho dù giữa họ có một tài nguyên lớn để tính toán. 
 
-- Vào năm 1979, Shamir đã cho ra mắt lược đồ Shamir’s Secret Sharing Scheme (SSSS) dựa vào ý tưởng trên. 
+--> Vào năm 1979, Shamir đã cho ra mắt lược đồ Shamir’s Secret Sharing Scheme (SSSS) dựa vào ý tưởng trên. 
 
 ## Công thức nội suy Lagrange
 
@@ -48,7 +48,7 @@ Còn trong trường hợp $\displaystyle \deg p( x) =2$ thì ta xác định đ
 
 
 
-Đặt $\displaystyle h( x) =q( x) -p( x)$ thì $\displaystyle h( x)$ có 3 nghiệm phân biệt là $\displaystyle 1,2,3$ cho nên $\displaystyle \deg h( x) \geqslant 3$ trong khi đó $\displaystyle \deg( q( x) -p( x)) \leqslant \max\{\deg p,\deg q\} =2$ cho nên ta có điều mâu thuẫn 
+Đặt $\displaystyle h( x) =q( x) -p( x)$ thì $\displaystyle h( x)$ có 3 nghiệm phân biệt là $\displaystyle 1,2,3$ cho nên $\displaystyle \deg h( x) \geqslant 3$ trong khi đó $\displaystyle \deg( q( x) -p( x)) \leqslant \max\[\deg p,\deg q\] =2$ cho nên ta có điều mâu thuẫn 
 
 Như vậy, ta phát biểu bài toán nội suy tổng quát như sau:
 
@@ -108,6 +108,37 @@ $$\begin{equation*}
 nhưng từ điều kiện $\displaystyle x_{i} ,x_{j}$ đôi một phân biệt nên ta có $\displaystyle \det( X) \neq 0$ và có điều phải chứng minh. 
 
 ## Ứng dụng vào lược đồ
+
+Lược đồ như sau:
+
+
+
+Chọn $\displaystyle n$ phần tử phân biệt $\displaystyle x_{1} ,x_{2} ,...,x_{n}$ trong $\displaystyle Z_{p}$ và $\displaystyle x_{i} \neq 0$ với mọi $\displaystyle i$. Mỗi thành viên $\displaystyle P_{i}$ sẽ có một giá trị $\displaystyle x_{i}$. 
+
+
+
+Giả sử bây giờ ta muốn trao khóa bí mật $\displaystyle S\in Z_{p}$ cho các thành viên. Ta sẽ chọn ngẫu nhiên và độc lập $\displaystyle k-1$ phần tử $\displaystyle a_{1} ,a_{2} ,...,a_{k-1}$ thuộc $\displaystyle Z_{p}$. Các giá trị này được giữ bí mật. Sau đó ta sẽ thực hiện tính toán: Với $\displaystyle 1\leqslant i\leqslant n$, tính $\displaystyle y_{i} =a( x_{i})$ trong đó 
+
+$$\begin{equation*}
+a( x) =S+\sum_{j=1}^{k-1} a_{j} x^{j}(\bmod p) ,k\leqslant n
+\end{equation*}$$
+
+Ta phân phối các giá trị $\displaystyle y_{i}$ cho $\displaystyle P_{i}$ với $\displaystyle 1\leqslant i\leqslant n$. Số nguyên tố $\displaystyle p$ được chọn đảm bảo $\displaystyle p >\max\{S,n\}$.
+
+
+
+Như vậy để tính lại $\displaystyle a( 0)$ ta sẽ dùng công thức nội suy Lagrange ở trên trong điều kiện phải có đủ $\displaystyle k$ người cùng tham gia xác thực. Lúc này
+
+$$\begin{gather*}
+S=a( 0) =\sum_{i=1}^{k} y_{i} \lambda_{i}\bmod p\\
+=\sum_{i=1}^{k} y_{i}\prod_{j\neq i}\frac{-x_{i}}{x_{i} -x_{j}}\bmod p
+\end{gather*}$$
+
+Ta có thể tìm lại được $\displaystyle a( 0)$ từ các giá trị $\displaystyle y_{i} ,x_{i}$ đã biết ở trên. 
+
+
+## Bài tập
+
 
 
 ## Tham khảo 
