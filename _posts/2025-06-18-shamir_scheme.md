@@ -304,7 +304,7 @@ Tóm tắt: Bài sẽ tương tác với server sau `socket.cryptohack.org 13384
 
 ![image](https://github.com/user-attachments/assets/268ec3b9-39fc-44e6-9a30-54ab044a6ed4)
 
-Như mọi người thấy thì đây là kế hoạch của imposter. Đầu tiên gửi một fake share để thực hiện lại quá trình kết hợp shares của toàn bộ người chơi. Sau đó imposter sẽ giả mạo địa chỉ của ví bitcoin bằng cách gửi một giá trị share mà sau khi kết hợp lại thì secret sẽ là địa chỉ của ví này. Và cuối cùng là mở ví chứa 1 triệu đô, lấy tiền và hưởng thụ thôi.
+Như mọi người thấy thì đây là kế hoạch của imposter. Đầu tiên gửi một fake share để thực hiện lại quá trình kết hợp shares của toàn bộ người chơi. Sau đó imposter sẽ giả mạo địa chỉ của ví bitcoin bằng cách gửi một giá trị share mà sau khi kết hợp lại thì secret sẽ là địa chỉ của một ví giả mạo. Và cuối cùng là gửi đúng địa chỉ ví bitcoin gốc để lụm tiền. 
 
 Ở bài này thì ta sẽ cần tìm hiểu qua về share forgery. Mọi người có thể xem qua ở đây: https://github.com/jvdsn/crypto-attacks/blob/master/attacks/shamir_secret_sharing/share_forgery.py
 
