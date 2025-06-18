@@ -131,16 +131,281 @@ Như vậy để tính lại $\displaystyle a( 0)$ ta sẽ dùng công thức n�
 
 $$\begin{gather*}
 S=a( 0) =\sum_{i=1}^{k} y_{i} \lambda_{i}\bmod p\\
-=\sum_{i=1}^{k} y_{i}\prod_{j\neq i}\frac{-x_{i}}{x_{i} -x_{j}}\bmod p
+=\sum_{i=1}^{k} y_{i}\prod_{j\neq i}\frac{-x_{j}}{x_{i} -x_{j}}\bmod p
 \end{gather*}$$
 
 Ta có thể tìm lại được $\displaystyle a( 0)$ từ các giá trị $\displaystyle y_{i} ,x_{i}$ đã biết ở trên. 
+
+Sample:
+
+```python
+from sage.all import *
+from Crypto.Util.number import *
+# Lagrange trong sage
+# F = GF(17)
+# P = PolynomialRing(F, 'x')
+# points = [(F.random_element(),F.random_element()) for _ in range(3)]
+# f = P.lagrange_polynomial(points)
+# print(f)
+
+def lagrange_mod_p(x_val, y_val, p):
+    assert len(x_val) == len(y_val)
+    k = len(x_val)
+    coeffs = [0] * k
+
+    for i in range(k):
+        xi, yi = x_val[i], y_val[i]
+        li = [1]
+
+        for j in range(k):
+            if i != j:
+                xj = x_val[j]
+                denom = (xi - xj) % p
+                denom_inv = inverse(denom, p)
+                new_li = [0] * (len(li) + 1)
+                for a in range(len(li)):
+                    new_li[a]     = (new_li[a] + li[a] * (-xj) * denom_inv) % p
+                    new_li[a + 1] = (new_li[a + 1] + li[a] * denom_inv) % p
+                li = new_li
+
+        for deg in range(len(li)):
+            coeffs[deg] = (coeffs[deg] + yi * li[deg]) % p
+    return coeffs
+def _eval_at_0(x_val,y_val,p):
+    val = 0  # f(0) = 0 
+    k = len(x_val)
+    assert len(x_val) == len(y_val)
+    for i in range(k):
+        xi, yi = x_val[i], y_val[i]
+        prod = 1
+        for j in range(k):
+            if j != i:
+                nume = (-x_val[j]) % p 
+                deno = inverse(xi-x_val[j],p)
+                prod *= (nume*deno)%p 
+                prod %= p 
+        val += yi*prod
+        val %= p 
+    return val
+
+def _eval_at(poly, x, prime):
+    accum = 0
+    for coeff in reversed(poly):
+        accum *= x
+        accum += coeff
+        accum %= prime
+    return accum
+```
+
+Implement đầy đủ trên wiki: https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing#Python_example
 
 
 ## Bài tập
 
 
+### CryptoHack/Armory
 
+Source code của bài:
+
+
+```python
+#!/usr/bin/env python3
+
+import hashlib
+
+FLAG = b"crypto{???????????????????????}"
+PRIME = 77793805322526801978326005188088213205424384389488111175220421173086192558047
+
+
+def _eval_at(poly, x, prime):
+    accum = 0
+    for coeff in reversed(poly):
+        accum *= x
+        accum += coeff
+        accum %= prime
+    return accum
+
+
+def make_deterministic_shares(minimum, shares, secret, prime):
+    if minimum > shares:
+        raise ValueError("Pool secret would be irrecoverable.")
+
+    coefs = [secret]
+    for i in range(1, shares + 1):
+        coef = hashlib.sha256(coefs[i-1]).digest()
+        coefs.append(coef)
+    coefs = [int.from_bytes(p, 'big') for p in coefs]
+    poly = coefs[:minimum]
+
+    points = []
+    for i in range(1, shares + 1):
+        point = _eval_at(poly, coefs[i], prime)
+        points.append((coefs[i], point))
+
+    return points
+
+
+shares = make_deterministic_shares(minimum=3, shares=7, secret=FLAG, prime=PRIME)
+for share in shares:
+    print(share)
+```
+
+Và output:
+
+```
+(105622578433921694608307153620094961853014843078655463551374559727541051964080, 25953768581962402292961757951905849014581503184926092726593265745485300657424)
+```
+
+Phân tích soucre: Hàm `make_deterministic_shares` tạo một đa thức có bậc là `shares` và gán cho nó các hệ số bằng cách tính SHA256 của hệ số trước đó: 
+
+```python
+coef = hashlib.sha256(coefs[i-1]).digest()
+coefs.append(coef)
+```
+
+Phần sau thì hơi sú một chút: Nó trả về cặp giá trị $(a_{i},f(a_{i}))$. Nhưng nhờ vậy mình có thể tạo tiếp được các hệ số từ $a_{1}$ trở đi. Sau đó từ các hệ số này ta sẽ tính lại được $a_{0}$ từ giá trị $f(a_{1})$ đã biết. 
+
+
+Script:
+```python
+import hashlib
+from sage.all import *
+from Crypto.Util.number import *
+
+PRIME = 77793805322526801978326005188088213205424384389488111175220421173086192558047
+def _eval_at(poly, x, prime):
+    accum = 0
+    for coeff in reversed(poly):
+        accum *= x
+        accum += coeff
+        accum %= prime
+    return accum
+
+a1 = 105622578433921694608307153620094961853014843078655463551374559727541051964080
+f_a1 = 25953768581962402292961757951905849014581503184926092726593265745485300657424
+a1_bytes = a1.to_bytes((a1.bit_length()+7)//8,'big')
+a2_bytes = hashlib.sha256(a1_bytes).digest()
+a2 = int.from_bytes(a2_bytes,'big')
+
+a0 = (f_a1-pow(a1,2,PRIME)-a2*pow(a1,2,PRIME))% PRIME
+flag = a0.to_bytes((a1.bit_length()+7)//8,'big')
+print(flag)
+```
+
+### CryptoHack/ Toshi's Treasure
+
+Bài cho một file hyper_privkey.txt
+
+```
+my_1k_wallet_privkey = "8b09cfc4696b91a1cc43372ac66ca36556a41499b495f28cc7ab193e32eadd30"
+```
+
+Tóm tắt: Bài sẽ tương tác với server sau `socket.cryptohack.org 13384`. 
+
+![image](https://github.com/user-attachments/assets/268ec3b9-39fc-44e6-9a30-54ab044a6ed4)
+
+Như mọi người thấy thì đây là kế hoạch của imposter. Đầu tiên gửi một fake share để thực hiện lại quá trình kết hợp shares của toàn bộ người chơi. Sau đó imposter sẽ giả mạo địa chỉ của ví bitcoin bằng cách gửi một giá trị share mà sau khi kết hợp lại thì secret sẽ là địa chỉ của ví này. Và cuối cùng là mở ví chứa 1 triệu đô, lấy tiền và hưởng thụ thôi.
+
+Ở bài này thì ta sẽ cần tìm hiểu qua về share forgery. Mọi người có thể xem qua ở đây: https://github.com/jvdsn/crypto-attacks/blob/master/attacks/shamir_secret_sharing/share_forgery.py
+
+SSSS trong bài này được cài đặt theo bản chuẩn ở trên wiki https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing#Python_example với modulo là số nguyên tố $p=2^{127}-1$
+
+Mình có đọc qua được bài này: https://crypto.stackexchange.com/questions/54578/how-to-forge-a-shamir-secret-share
+
+Bây giờ ta đã biết được
+
+- Share của bản thân
+
+- Giá trị $\displaystyle x$ của mỗi người
+
+-  Giá trị của secret ban đầu chính là $S$. 
+
+Ta cũng biết được giá trị $\displaystyle y_{1}$ của chính bản thân mình. Secret ban đầu là $\displaystyle S$ và ta muốn giả mạo nó thành $\displaystyle S'$ bằng cách tính 
+
+$$\begin{equation*}
+y_{1} '=y_{1} +( S'-S)\prod_{j=2}^{k}\frac{x_{j} -x_{1}}{x_{j}}
+\end{equation*}$$
+
+Như vậy secret sau khi kết hợp lại sẽ được tính bởi 
+
+$$\begin{gather*}
+S=\sum_{i=1}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}}\\
+=\left( y_{1} +( S'-S)\prod_{j=2}^{k}\frac{x_{j} -x_{1}}{x_{j}}\right)\prod_{j=2}^{k}\frac{x_{j}}{x_{j} -x_{i}} +\sum_{i=2}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}}\\
+=y_{1}\prod_{j=2}^{k}\frac{x_{j}}{x_{j} -x_{i}} +\sum_{i=2}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}} +S'-S\\
+=S+S'-S=S'
+\end{gather*}$$
+
+Ở bài này không cho ta biết secret cho nên ta phải tự recover lại.
+
+Ta có 
+
+$$\begin{equation*}
+S=\sum_{i=1}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}}
+\end{equation*}$$
+
+Ta không biết $\displaystyle y_{2} ,y_{3} ,y_{4} ,y_{5}$ nhưng ta biết $\displaystyle y_{1}$. Ta cần khôi phục lại phần sau đó là 
+
+$$\begin{equation*}
+\sum_{i=2}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}}
+\end{equation*}$$
+
+Bằng cách ở bước đầu tiên ta gửi fake share. Sau đó nhận về secret key lỗi.
+
+$$\begin{equation*}
+S'=\sum_{i=1}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}}
+\end{equation*}$$
+
+Giả sử ta chọn $\displaystyle x=6,y=1$ thì 
+
+$$\begin{gather*}
+S'=\sum_{i=4}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}} +\prod_{j=2}^{k}\frac{x_{j}}{x_{j} -x_{i}}\\
+\Longrightarrow S'-\prod_{j=2}^{k}\frac{x_{j}}{x_{j} -x_{i}} =\sum_{i=4}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}} =C
+\end{gather*}$$
+
+Sau đó ta sử dụng lại giá trị $\displaystyle C$ này, cố định khác $\displaystyle x_{i}$ là được. 
+
+
+Script:
+
+```python
+from Crypto.Util.number import *
+from pwn import *
+import json
+
+my_1k_wallet_privkey = "8b09cfc4696b91a1cc43372ac66ca36556a41499b495f28cc7ab193e32eadd30"
+my_wallet = int(my_1k_wallet_privkey,16)
+print(my_wallet)
+
+p = 2**521-1 # 13 Mersenne prime
+r = remote("socket.cryptohack.org", 13384)
+res = r.recvline().decode().strip()
+print(res)
+res = json.loads(res)
+x = res["x"]
+y = res["y"]
+y = int(res["y"], 16)
+for _ in range(4):
+    print(r.recvline().decode().strip())
+payload1 = {"sender":"hyper","x":6,"y":"0x01"}
+payload1 = json.dumps(payload1).encode()
+r.sendline(payload1)
+res = r.recvline().decode().strip()
+print(res)
+res = json.loads(res)
+priv_fake = res["privkey"]
+print(priv_fake)
+s_fake = int(priv_fake,16)
+const = (s_fake - 5 ) % p # chính là C mà ta đang tính
+secret_key = ((y*5)+const)%p
+fake_y = (y+(my_wallet-secret_key)*pow(5,-1,p))%p
+payload2 = {"sender":"hyper","x":6,"y":hex(fake_y)}
+payload2 = json.dumps(payload2).encode()
+r.sendline(payload2)
+payload3 = {"privkey":hex(secret_key)}
+payload3 = json.dumps(payload3).encode()
+r.sendline(payload3)
+r.interactive()
+```
 ## Tham khảo 
 
 [1] https://people.eecs.berkeley.edu/~daw/teaching/cs276-s04/22.pdf
