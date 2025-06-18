@@ -362,7 +362,7 @@ S'=\sum_{i=4}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}} +\prod_{j=2
 \Longrightarrow S'-\prod_{j=2}^{k}\frac{x_{j}}{x_{j} -x_{i}} =\sum_{i=4}^{k} y_{i}\prod_{j\neq i}^{k}\frac{x_{j}}{x_{j} -x_{i}} =C
 \end{gather*}$$
 
-Sau đó ta sử dụng lại giá trị $\displaystyle C$ này, cố định khác $\displaystyle x_{i}$ là được. 
+Sau đó ta sử dụng lại giá trị $\displaystyle C$ này, cố định các giá trị $\displaystyle x_{i}$ là được. 
 
 
 Script:
